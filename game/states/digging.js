@@ -34,7 +34,7 @@ state.create = function() {
 }
 
 state.update = function() {
-    terrain.separateBody(dummy.body, true);
+    this.game.physics.diggers.separateTerrainFromBody(terrain, dummy.body, true);
 
     if (keys.right.isDown) {
         dummy.body.velocity.x = 2;
@@ -46,7 +46,7 @@ state.update = function() {
         dummy.body.velocity.y = -8.8;
     }
 
-    terrain.separateBody(dummy.body);
+    this.game.physics.diggers.separateTerrainFromBody(terrain, dummy.body);
 }
 
 

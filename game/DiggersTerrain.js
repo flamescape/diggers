@@ -15,7 +15,7 @@ class DiggersTerrain {
         this.backgroundLayer = map.layers.find(l => l.name === "Background");
         this.tilesets = map.tilesets;
 
-        this.tiles = this.tilesets.reduce((tiles, ts) => {
+        this.tileTypes = this.tilesets.reduce((tiles, ts) => {
             for (let i = 0; i < ts.tilecount; i++) {
                 let tiledef = {
                     idx: i,
@@ -46,6 +46,18 @@ class DiggersTerrain {
             diggable: false,
             water: false
         }]);
+
+        this.tiles = this.foregroundLayer.data.reduce((tiles, tile, idx) => {
+            tiles.push({
+                idx: idx,
+                type: this.tileTypes[tile],
+                x: idx % this.width,
+                y: (idx / this.width) << 0,
+                worldX: (idx % this.width) * this.tileSize,
+                worldY: ((idx / this.width) << 0) * this.tileSize
+            });
+            return tiles;
+        }, []);
     }
 
     createSprites() {
@@ -62,7 +74,7 @@ class DiggersTerrain {
                 let cell = layer.data[(y*this.width) + x];
                 if (cell <= 1) continue;
 
-                let tile = this.tiles[cell];
+                let tile = this.tileTypes[cell];
 
                 let spr = this.game.add.image(
                     x * this.tileSize,
@@ -74,10 +86,6 @@ class DiggersTerrain {
                 spriteBatch.add(spr);
             }
         }
-    }
-
-    separateBody(body, gravityPass = false) {
-
     }
 
     getTileBodiesIntersecting(body) {
@@ -94,18 +102,20 @@ class DiggersTerrain {
         return this.group[y][x];
     }
 
-    getBigTilesNear(pos) {
-        return this.getTilesNear(pos).filter(t => !!t.data.big);
+    getTileAt(x, y) {
+        return this.tiles[(y * this.width) + x];
     }
 
     getTilesNear(pos) {
-        const x = this.x2gx(pos.x);
-        const y = this.y2gy(pos.y);
+        const x = (pos.x / this.tileSize) << 0;
+        const y = (pos.y / this.tileSize) << 0;
         let tiles = [];
         for (let i = -1; i <= 1; i++) {
             for (let j = -1; j <= 1; j++) {
-                let gtiles = this.getTilesInGroup(x + i, y + j);
-                tiles.push(...gtiles);
+                let tile = this.getTileAt(x + i, y + j);
+                if (tile && tile.type.idx > 0) {
+                    tiles.push(tile);
+                }
             }
         }
         return tiles;
@@ -116,7 +126,7 @@ class DiggersTerrain {
     }
 
     debugRenderCell(x,y,cell) {
-        const tile = this.tiles[cell];
+        const tile = this.tileTypes[cell];
 
         if (!tile || tile.mask === DiggersTerrain.MASK_EMPTY) {
             return;

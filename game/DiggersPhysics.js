@@ -47,25 +47,26 @@ class DiggersPhysics {
         object.body = new DiggersPhysicsBody(object);
     }
 
-    collideTerrain(mobile, terrain, stepUpHeight, gravityPass = false) {
-        let tiles = terrain.getTileBodiesNear(mobile.position);
+    separateTerrainFromBody(terrain, body, gravityPass = false) {
+        const stepUpHeight = terrain.tileHeight / 3;
+        const tiles = terrain.getTilesNear(body.position);
 
-        this.separateTerrainY(mobile.body, tiles, stepUpHeight, gravityPass);
-        this.separateTerrainX(mobile.body, tiles);
+        this.separateTerrainY(body, tiles, stepUpHeight, gravityPass);
+        // this.separateTerrainX(body, tiles);
     }
 
-    separateTerrainY(mobile, tiles, stepUpHeight, gravityPass) {
-        if (!mobile.enable || !mobile.intersectsAny(tiles)) {
+    separateTerrainY(body, tiles, stepUpHeight, gravityPass) {
+        if (!body.intersectsAny(tiles)) {
             return false;
         }
 
-        var overlap = mobile.overlapAllY(tiles, gravityPass);
+        var overlap = body.overlapAllY(tiles, gravityPass);
 
         if (Math.abs(overlap) < stepUpHeight) {
-            mobile.position.y -= overlap;
-            if (mobile.intersectsAny(tiles)) {
+            body.position.y -= overlap;
+            if (body.intersectsAny(tiles)) {
                 // if we're still intersecting, revert back to previous y
-                mobile.position.y = mobile.prev.y;
+                body.position.y = body.prev.y;
             }
         }
     }
