@@ -1,23 +1,4 @@
 
-class DiggersTerrainGroup extends Array {
-    constructor(terrain) {
-        super();
-        this.terrain = terrain;
-        function rc() {
-            return ((Math.random() * 200) + 50) << 0;
-        }
-        this.debugColor = `rgba(${rc()}, ${rc()}, ${rc()}, 0.7)`;
-    }
-
-    add(sprite) {
-        this.push(sprite);
-    }
-}
-
-var unbreakableTiles = [3,88,90,91,93,94,95,123,124,125,128,129,130,131,132,133,134,143,146,363,364,
-64,65,152,153,154,155,156,157,158,159,160,241,242,243,244,309,310,311,312,313,314,315,316,365,366,367,368,369,370,371,372,373,374,
-379,380,381,382,383,384,385,386,387,388];
-
 class DiggersTerrain {
     constructor(map, game) {
 
@@ -109,8 +90,6 @@ class DiggersTerrain {
 
     createSprites() {
         // creates foreground & background sprites
-        // adds them to the game
-
         this.backgroundSpriteBatch = this.createSpriteBatch(this.backgroundLayer);
         this.foregroundSpriteBatch = this.createSpriteBatch(this.foregroundLayer);
     }
@@ -137,82 +116,10 @@ class DiggersTerrain {
         }
     }
 
-    x2gx(x) {
-        return (x / this.tileSize / this.groupSize) << 0;
-    }
-    y2gy(y) {
-        return (y / this.tileSize / this.groupSize) << 0;
-    }
-
-    add(sprite) {
-        const x = this.x2gx(sprite.x);
-        const y = this.y2gy(sprite.y);
-        this.group[y][x].add(sprite);
-        this.game.physics.enable(sprite, Phaser.Physics.DIGGERS);
-        this.push(sprite);
-        return sprite;
-    }
-
-    remove(sprite) {
-        const x = this.x2gx(sprite.x);
-        const y = this.y2gy(sprite.y);
-        const idx = this.group[y][x].indexOf(sprite);
-        if (idx === -1) return false;
-        this.group[y][x].splice(idx, 1);
-        sprite.destroy();
-        return true;
-    }
-
-    addSmall(tile) {
-        let s = this.game.add.sprite(tile.x, tile.y);
-        s.width = this.tileSize/4;
-        s.height = this.tileSize/8;
-        s.data.unbreakable = !!tile.unbreakable;
-        this.add(s);
-        return s;
-    }
-
-    addBig(tile) {
-        let s = this.game.add.sprite(tile.x, tile.y);
-        s.width = this.tileSize;
-        s.height = this.tileSize;
-        s.data.big = true;
-        s.data.unbreakable = !!tile.unbreakable;
-        this.add(s);
-        return s;
-    }
-
-    breakTile(tile) {
-        let newTiles = [];
-        for (let x = 0; x < 4; x++) {
-            for (let y = 0; y < 8; y++) {
-                newTiles.push(this.addSmall({
-                    x: tile.x + (x/4)*this.tileSize,
-                    y: tile.y + (y/8)*this.tileSize,
-                    unbreakable: !!tile.data.unbreakable
-                }));
-            }
-        }
-        this.remove(tile);
-        return newTiles;
-    }
-
     getTileBodiesIntersecting(body) {
         this.getBigTilesNear({x: body.left, y: body.top}).forEach(tile => this.breakTile(tile));
 
         return this.getTileBodiesNear({x: body.left, y: body.top}).filter(tile => tile.intersects(body));
-
-        // .reduce((tiles, tile) => {
-        //     if (tile.data.big) {
-        //         let newTiles = this.breakTile(tile);
-        //         tiles.push(...newTiles);
-        //     } else {
-        //         tiles.push(tile);
-        //     }
-        //     return tiles;
-        // }, []).filter(tile =>
-        //     tile.body.intersects(body)
-        // );
     }
 
     getTilesInGroup(x, y) {
@@ -298,8 +205,5 @@ class DiggersTerrain {
 }
 DiggersTerrain.MASK_SOLID = 4294917119;
 DiggersTerrain.MASK_EMPTY = 0;
-
-DiggersTerrain.DEBUG_BREAKABLE = Symbol("DEBUG_BREAKABLE");
-DiggersTerrain.DEBUG_GROUPS = Symbol("DEBUG_GROUPS");
 
 module.exports = DiggersTerrain;

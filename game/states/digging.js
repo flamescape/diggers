@@ -1,7 +1,7 @@
-require('../DiggersPhysics');
+
 var DiggersTerrain = require('../DiggersTerrain');
 var DiggersPhysicsBody = require('../DiggersPhysicsBody');
-var game = require('../phasergame');
+var game = require('../');
 
 var state = {};
 
