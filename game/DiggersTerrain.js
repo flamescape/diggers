@@ -1,7 +1,6 @@
 
 class DiggersTerrain {
     constructor(map, game) {
-
         this.game = game;
 
         if (map.tilewidth !== map.tileheight) {
@@ -47,45 +46,6 @@ class DiggersTerrain {
             diggable: false,
             water: false
         }]);
-
-        return;
-
-        for (let y = 0; y < foreground.height; y++) {
-            for (let x = 0; x < foreground.width; x++) {
-                let cell = foreground.data[(y*foreground.width) + x];
-                if (cell <= 1) continue;
-
-                if (tileshapes[cell]) {
-                    tileshapes[cell].forEach(part => {
-                        terrain.addSmall({
-                            x: (TILE_SIZE*x)+(part[0]*(TILE_SIZE/4)),
-                            y: (TILE_SIZE*y)+(part[1]*(TILE_SIZE/8)),
-                            unbreakable: unbreakableTiles.indexOf(cell) !== -1
-                        });
-                    });
-                } else {
-                    terrain.addBig({
-                        x: TILE_SIZE*x,
-                        y: TILE_SIZE*y,
-                        unbreakable: unbreakableTiles.indexOf(cell) !== -1
-                    });
-                }
-            }
-        }
-
-        this.tileSize = tileSize;
-        this.groupSize = groupSize;
-        let wgroups = width / this.groupSize;
-        let hgroups = height / this.groupSize;
-        this.group = [];
-        this.groups = [];
-        for (let y = 0; y < hgroups; y++) {
-            this.group[y] = [];
-            for (let x = 0; x < wgroups; x++) {
-                this.group[y][x] = new DiggersTerrainGroup(this);
-                this.groups.push(this.group[y][x]);
-            }
-        }
     }
 
     createSprites() {
@@ -114,6 +74,10 @@ class DiggersTerrain {
                 spriteBatch.add(spr);
             }
         }
+    }
+
+    separateBody(body, gravityPass = false) {
+
     }
 
     getTileBodiesIntersecting(body) {

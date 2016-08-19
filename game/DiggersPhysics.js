@@ -1,6 +1,9 @@
 var DiggersTerrain = require('./DiggersTerrain');
 var DiggersPhysicsBody = require('./DiggersPhysicsBody');
 
+
+// add the DIGGERS Physics system to Phaser
+
 Phaser.Physics.DIGGERS = Symbol('DIGGERS');
 
 let oldStartSystem = Phaser.Physics.prototype.startSystem;
@@ -26,6 +29,8 @@ Phaser.Physics.prototype.destroy = function(object, system){
     this.diggers = null;
     return oldDestroy.apply(this, arguments);
 }
+
+// Define the DiggersPhysics system
 
 class DiggersPhysics {
     constructor(game, config){

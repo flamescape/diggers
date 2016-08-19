@@ -9,7 +9,6 @@ state.preload = function() {
     game.load.spritesheet("gblock", "/img/gblock.png", 48, 48);
     game.load.image("gback", "/img/gback.png");
     game.load.json("map", "/maps/1.json");
-    game.load.json("tileshapes", "/maps/tileshapes.json");
 }
 
 var terrain, dummy, keys, tileSize;
@@ -35,19 +34,19 @@ state.create = function() {
 }
 
 state.update = function() {
-    // terrain.separateBody(dummy.body, true);
-    //
-    // if (keys.right.isDown) {
-    //     dummy.body.velocity.x = 2;
-    // } else if (keys.left.isDown) {
-    //     dummy.body.velocity.x = -2;
-    // }
-    //
-    // if (keys.up.isDown && dummy.body.touching.down) {
-    //     dummy.body.velocity.y = -8.8;
-    // }
-    //
-    // terrain.separateBody(dummy.body);
+    terrain.separateBody(dummy.body, true);
+
+    if (keys.right.isDown) {
+        dummy.body.velocity.x = 2;
+    } else if (keys.left.isDown) {
+        dummy.body.velocity.x = -2;
+    }
+
+    if (keys.up.isDown && dummy.body.touching.down) {
+        dummy.body.velocity.y = -8.8;
+    }
+
+    terrain.separateBody(dummy.body);
 }
 
 
