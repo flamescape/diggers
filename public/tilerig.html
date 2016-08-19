@@ -1,0 +1,90 @@
+<!doctype html>
+<html ng-app="app">
+<head>
+<style>
+.tile {
+    width: 512px;
+    height: 512px;
+    background: rgba(150,150,150,0.3);
+    background-image: url(/img/gblock.png);
+    background-size: 10240px;
+    background-position: calc(-512px * 9) calc(-512px * 6);
+}
+.piece {
+    border: 1px dotted black;
+    width: 128px;
+    height: 64px;
+    box-sizing: border-box;
+    float: left;
+}
+.piece.on {
+    background: rgba(150,50,50,0.7);
+}
+</style>
+</head>
+<body ng-controller="RigCtrl as c" ng-keydown="c.onkey($event)">
+
+
+<div class="tile" ng-style="{'background-position': c.stylePos()}">
+    <div class="piece" ng-class="{on:p.on}" ng-repeat="p in c.pieces" ng-click="p.on = !p.on"></div>
+</div>
+<div>
+    <span ng-if="p.on" ng-repeat="p in c.pieces">{{c.flag(p.idx)}}, </span>
+</div>
+<h1>{{c.tileIdx}} : {{c.mask()}}</h1>
+
+<img src="/img/gblock.png" ng-click="c.select($event)" />
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+<script>
+angular.module('app', [])
+.controller('RigCtrl', function(){
+    var c = this;
+
+    c.tileIdx = 0;
+
+    c.stylePos = () => {
+        let x = c.tileIdx % 20;
+        let y = (c.tileIdx / 20)<<0;
+        return `calc(-512px * ${x}) calc(-512px * ${y})`;
+    }
+
+    c.onkey = e => {
+        switch (e.keyCode) {
+            case 39: //right
+                c.tileIdx++;
+                break;
+            case 37: //left
+                c.tileIdx--;
+                break;
+        }
+    }
+
+    c.pieces = [];
+
+    for (let i = 0; i < 32; i++) {
+        c.pieces.push({
+            idx: i,
+            on: false
+        });
+    }
+
+    c.flag = (i) => {
+        return Math.pow(2, i);
+    }
+
+    c.mask = () => {
+        return c.pieces.reduce((total, p)=> p.on ? total + c.flag(p.idx) : total , 0);
+    }
+
+    c.select = e => {
+        const x = (e.offsetX/48)<<0;
+        const y = (e.offsetY/48)<<0;
+        c.tileIdx = (y * 20) + x;
+    }
+})
+;
+</script>
+
+</body>
+</html>
