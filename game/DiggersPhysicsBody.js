@@ -6,8 +6,6 @@ class DiggersPhysicsBody {
 
         this.type = Phaser.Physics.DIGGERS;
 
-        this.enable = true;
-
         this.offset = new Phaser.Point();
 
         this.position = new Phaser.Point(sprite.x, sprite.y);
@@ -65,20 +63,10 @@ class DiggersPhysicsBody {
     }
 
     preUpdate() {
-        if (!this.enable || !this.mobile) {
-            return;
-        }
-
-        this.dirty = true;
-
         this.prev.x = this.position.x;
         this.prev.y = this.position.y;
 
-        this.position.x = (this.sprite.world.x - (this.sprite.anchor.x * this.sprite.width)) + this.sprite.scale.x * this.offset.x;
-        this.position.y = (this.sprite.world.y - (this.sprite.anchor.y * this.sprite.height)) + this.sprite.scale.y * this.offset.y;
-
-
-        // apply velocity
+        // reset velocity on prior collision
         if (this.touching.down && this.velocity.y > 0) {
             this.velocity.y = 0;
         }
@@ -86,21 +74,19 @@ class DiggersPhysicsBody {
             this.velocity.y = 0;
         }
 
-
         // apply gravity
         this.velocity.y += this.gravity;
 
-
-        // cap vertical velocity
+        // cap velocities
         if (this.velocity.y > 0 && this.velocity.y < 2) this.velocity.y = 2;
-        if (this.velocity.y > 4) this.velocity.y = 4;
+        if (this.velocity.y > 6) this.velocity.y = 6;
         if (this.velocity.y < -10) this.velocity.y = -10;
 
-        // apply vertical velocity
+        // apply velocity
         this.position.y += this.velocity.y;
         this.position.x += this.velocity.x;
 
-
+        // reset collisions
         this.touching.none = true;
         this.touching.up = false;
         this.touching.down = false;
@@ -116,14 +102,7 @@ class DiggersPhysicsBody {
     }
 
     postUpdate() {
-        if (!this.enable || !this.dirty || !this.mobile) {
-            return;
-        }
-
-        this.dirty = false;
-
-        this.sprite.position.x += this.deltaX();
-        this.sprite.position.y += this.deltaY();
+        this.sprite.position = this.position;
     }
 
     render(color = 'rgba(255,0,0,0.7)', filled = false) {

@@ -45,9 +45,6 @@ class DiggersPhysics {
         }
 
         object.body = new DiggersPhysicsBody(object);
-        if (object.parent && object.parent instanceof Phaser.Group) {
-            object.parent.addToHash(object);
-        }
     }
 
     collideTerrain(mobile, terrain, stepUpHeight, gravityPass = false) {
