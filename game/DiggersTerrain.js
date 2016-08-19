@@ -1,4 +1,19 @@
 
+class DiggersTerrainTile {
+    constructor(params) {
+        for (let x in params) {
+            this[x] = params[x];
+        }
+    }
+
+    get worldX() { return this.x * this.size; }
+    get worldY() { return this.y * this.size; }
+    get top() { return this.worldY; }
+    get left() { return this.worldX; }
+    get bottom() { return this.worldY + this.size; }
+    get right() { return this.worldX + this.size; }
+}
+
 class DiggersTerrain {
     constructor(map, game) {
         this.game = game;
@@ -48,14 +63,13 @@ class DiggersTerrain {
         }]);
 
         this.tiles = this.foregroundLayer.data.reduce((tiles, tile, idx) => {
-            tiles.push({
-                idx: idx,
-                type: this.tileTypes[tile],
-                x: idx % this.width,
-                y: (idx / this.width) << 0,
-                worldX: (idx % this.width) * this.tileSize,
-                worldY: ((idx / this.width) << 0) * this.tileSize
-            });
+            tiles.push(new DiggersTerrainTile({
+                idx  : idx,
+                type : this.tileTypes[tile],
+                size : this.tileSize,
+                x    : idx % this.width,
+                y    : (idx / this.width) << 0,
+            }));
             return tiles;
         }, []);
     }
