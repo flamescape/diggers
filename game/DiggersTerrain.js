@@ -148,9 +148,9 @@ class DiggersTerrain {
 
         let colour = 'rgba(255,0,0,0.7)';
         if (tile.diggable) {
-            colour = 'rgba(0,255,0,0.8)';
+            colour = 'rgba(0,255,0,0.5)';
         } else if (tile.water) {
-            colour = 'rgba(0,0,255,0.8)';
+            colour = 'rgba(0,0,255,0.5)';
         }
 
         const ctx = this.game.context;
@@ -168,6 +168,9 @@ class DiggersTerrain {
 
         const tw = this.tileSize / 4;
         const th = this.tileSize / 8;
+
+        ctx.fillRect(px, py, this.tileSize, this.tileSize);
+        ctx.fillStyle = 'rgba(255,200,0,0.4)';
 
         for (let y = 0; y < 8; y++) {
             for (let x = 0; x < 4; x++) {
