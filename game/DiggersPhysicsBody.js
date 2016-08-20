@@ -224,10 +224,10 @@ class DiggersPhysicsBody {
         this.sprite.position.y = this.position.y << 0;
     }
 
-    render(color = 'rgba(255,0,0,0.7)') {
+    render(colour = 'rgba(255,0,0,0.7)') {
         let ctx = this.game.context;
-        ctx.fillStyle = color;
-        ctx.strokeStyle = color;
+        ctx.fillStyle = colour;
+        ctx.strokeStyle = colour;
         ctx.fillRect(this.position.x - this.game.camera.x, this.position.y - this.game.camera.y, this.width, this.height);
     }
 }
