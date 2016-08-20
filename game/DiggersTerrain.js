@@ -4,6 +4,8 @@ class DiggersTerrainTile {
         for (let x in params) {
             this[x] = params[x];
         }
+        this.tw = this.size/4;
+        this.th = this.size/8;
     }
 
     get worldX() { return this.x * this.size; }
@@ -25,11 +27,28 @@ class DiggersTerrainTile {
                 || this.top >= aabb.bottom<<0);
         }
 
-        // TODO: intersection calc for arbitrary masks
-        return !(this.right <= aabb.left<<0
-            || this.bottom <= aabb.top<<0
-            || this.left >= aabb.right<<0
-            || this.top >= aabb.bottom<<0);
+        // and now for any arbitrary tile mask...
+        for (let y = 0; y < 8; y++) {
+            for (let x = 0; x < 4; x++) {
+                if (Math.pow(2, (y*4)+x) & this.type.mask) {
+                    const top = this.top + (y * this.th);
+                    const bottom = top + this.th;
+                    const left = this.left + (x * this.tw);
+                    const right = left + this.tw;
+
+                    const collision = !(right <= aabb.left<<0
+                        || bottom <= aabb.top<<0
+                        || left >= aabb.right<<0
+                        || top >= aabb.bottom<<0);
+
+                    if (collision) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     overlapY(aabb, dy = 0) {
@@ -49,12 +68,36 @@ class DiggersTerrainTile {
             }
         }
 
-        // TODO: actual overlap calc for arbitrary tile mask
-        if (dy >= 0) {
-            return aabb.bottom - this.top;
-        } else {
-            return aabb.top - this.bottom;
+        // arbitrary tile mask
+        let overlap = 0;
+
+        for (let y = 0; y < 8; y++) {
+            for (let x = 0; x < 4; x++) {
+                if (Math.pow(2, (y*4)+x) & this.type.mask) {
+                    const top = this.top + (y * this.th);
+                    const bottom = top + this.th;
+                    const left = this.left + (x * this.tw);
+                    const right = left + this.tw;
+
+                    const collision = !(right <= aabb.left<<0
+                        || bottom <= aabb.top<<0
+                        || left >= aabb.right<<0
+                        || top >= aabb.bottom<<0);
+
+                    if (!collision) {
+                        continue;
+                    }
+
+                    if (dy >= 0) {
+                        overlap = Math.max(overlap, aabb.bottom - top);
+                    } else {
+                        overlap = Math.min(overlap, aabb.top - bottom);
+                    }
+                }
+            }
         }
+
+        return overlap;
     }
 
     overlapX(aabb, dx = 0) {
@@ -74,12 +117,36 @@ class DiggersTerrainTile {
             }
         }
 
-        // TODO: actual overlap calc for arbitrary tile mask
-        if (dx >= 0) {
-            return aabb.right - this.left;
-        } else {
-            return aabb.left - this.right;
+        // arbitrary tile mask
+        let overlap = 0;
+
+        for (let y = 0; y < 8; y++) {
+            for (let x = 0; x < 4; x++) {
+                if (Math.pow(2, (y*4)+x) & this.type.mask) {
+                    const top = this.top + (y * this.th);
+                    const bottom = top + this.th;
+                    const left = this.left + (x * this.tw);
+                    const right = left + this.tw;
+
+                    const collision = !(right <= aabb.left<<0
+                        || bottom <= aabb.top<<0
+                        || left >= aabb.right<<0
+                        || top >= aabb.bottom<<0);
+
+                    if (!collision) {
+                        continue;
+                    }
+
+                    if (dx >= 0) {
+                        overlap = Math.max(overlap, aabb.right - left);
+                    } else {
+                        overlap = Math.min(overlap, aabb.left - right);
+                    }
+                }
+            }
         }
+
+        return overlap;
     }
 }
 
@@ -220,8 +287,8 @@ class DiggersTerrain {
         const tw = this.tileSize / 4;
         const th = this.tileSize / 8;
 
-        ctx.fillRect(px, py, this.tileSize, this.tileSize);
-        ctx.fillStyle = 'rgba(255,200,0,0.4)';
+        // ctx.fillRect(px, py, this.tileSize, this.tileSize);
+        // ctx.fillStyle = 'rgba(255,200,0,0.4)';
 
         for (let y = 0; y < 8; y++) {
             for (let x = 0; x < 4; x++) {

@@ -37,9 +37,9 @@ state.create = function() {
 state.update = function() {
 
     if (keys.right.isDown) {
-        dummy.body.velocity.x = 2;
+        dummy.body.velocity.x = 5;
     } else if (keys.left.isDown) {
-        dummy.body.velocity.x = -2;
+        dummy.body.velocity.x = -5;
     }
 
     if (keys.up.isDown && dummy.body.touching.bottom) {
