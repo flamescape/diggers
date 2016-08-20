@@ -47,7 +47,7 @@ state.update = function() {
     }
 
     if (keys.up.isDown && dummy.body.touching.bottom) {
-        dummy.body.velocity.y = -8.8;
+        dummy.body.velocity.y = -8;
     }
 
 }
