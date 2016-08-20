@@ -41,9 +41,9 @@ state.create = function() {
 state.update = function() {
 
     if (keys.right.isDown) {
-        dummy.body.velocity.x = 5;
+        dummy.body.velocity.x = 2;
     } else if (keys.left.isDown) {
-        dummy.body.velocity.x = -5;
+        dummy.body.velocity.x = -2;
     }
 
     if (keys.up.isDown && dummy.body.touching.bottom) {
@@ -55,7 +55,9 @@ state.update = function() {
 
 const dummyColor = 'rgba(255,255,255,0.5)';
 state.render = function(){
-    terrain.debugRender();
+    if (keys.down.isDown) {
+        terrain.debugRender();
+    }
     dummy.body.render(dummyColor);
 }
 
