@@ -12,6 +12,75 @@ class DiggersTerrainTile {
     get left() { return this.worldX; }
     get bottom() { return this.worldY + this.size; }
     get right() { return this.worldX + this.size; }
+
+    intersects(aabb) {
+        if (this.type.mask === DiggersTerrain.MASK_EMPTY) {
+            return false;
+        }
+
+        if (this.type.mask === DiggersTerrain.MASK_SOLID) {
+            return !(this.right <= aabb.left<<0
+                || this.bottom <= aabb.top<<0
+                || this.left >= aabb.right<<0
+                || this.top >= aabb.bottom<<0);
+        }
+
+        // TODO: intersection calc for arbitrary masks
+        return !(this.right <= aabb.left<<0
+            || this.bottom <= aabb.top<<0
+            || this.left >= aabb.right<<0
+            || this.top >= aabb.bottom<<0);
+    }
+
+    overlapY(aabb, dy = 0) {
+        if (this.type.mask === DiggersTerrain.MASK_EMPTY) {
+            return 0;
+        }
+
+        if (!this.intersects(aabb)) {
+            return 0;
+        }
+
+        if (this.type.mask === DiggersTerrain.MASK_SOLID) {
+            if (dy >= 0) {
+                return aabb.bottom - this.top;
+            } else {
+                return aabb.top - this.bottom;
+            }
+        }
+
+        // TODO: actual overlap calc for arbitrary tile mask
+        if (dy >= 0) {
+            return aabb.bottom - this.top;
+        } else {
+            return aabb.top - this.bottom;
+        }
+    }
+
+    overlapX(aabb, dx = 0) {
+        if (this.type.mask === DiggersTerrain.MASK_EMPTY) {
+            return 0;
+        }
+
+        if (!this.intersects(aabb)) {
+            return 0;
+        }
+
+        if (this.type.mask === DiggersTerrain.MASK_SOLID) {
+            if (dx >= 0) {
+                return aabb.right - this.left;
+            } else {
+                return aabb.left - this.right;
+            }
+        }
+
+        // TODO: actual overlap calc for arbitrary tile mask
+        if (dx >= 0) {
+            return aabb.right - this.left;
+        } else {
+            return aabb.left - this.right;
+        }
+    }
 }
 
 class DiggersTerrain {
@@ -102,30 +171,16 @@ class DiggersTerrain {
         }
     }
 
-    getTileBodiesIntersecting(body) {
-        this.getBigTilesNear({x: body.left, y: body.top}).forEach(tile => this.breakTile(tile));
-
-        return this.getTileBodiesNear({x: body.left, y: body.top}).filter(tile => tile.intersects(body));
-    }
-
-    getTilesInGroup(x, y) {
-        if (!this.group[y] || !this.group[y][x]) {
-            return [];
-        }
-
-        return this.group[y][x];
-    }
-
     getTileAt(x, y) {
         return this.tiles[(y * this.width) + x];
     }
 
-    getTilesNear(pos) {
+    getTilesNear(pos, range = 1) {
         const x = (pos.x / this.tileSize) << 0;
         const y = (pos.y / this.tileSize) << 0;
         let tiles = [];
-        for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
+        for (let i = -range; i <= range; i++) {
+            for (let j = -range; j <= range; j++) {
                 let tile = this.getTileAt(x + i, y + j);
                 if (tile && tile.type.idx > 0) {
                     tiles.push(tile);
@@ -133,10 +188,6 @@ class DiggersTerrain {
             }
         }
         return tiles;
-    }
-
-    getTileBodiesNear(pos) {
-        return this.getTilesNear(pos).map(t => t.body);
     }
 
     debugRenderCell(x,y,cell) {

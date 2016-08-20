@@ -1,3 +1,94 @@
+var DiggersPhysics = require('./DiggersPhysics');
+
+class TerrainTouchSensor {
+    constructor(body) {
+        this.body = body;
+        this.precision = 1;
+    }
+
+    test(aabb) {
+        if (!this.body.nearbyTerrainTiles) return false;
+        return this.body.nearbyTerrainTiles.find(t => t.intersects(aabb)) || false;
+    }
+
+    get top() {
+        return this.test({
+            top: this.body.top - this.precision,
+            bottom: this.body.top,
+            left: this.body.left,
+            right: this.body.right
+        });
+    }
+    get bottom() {
+        return this.test({
+            top: this.body.bottom,
+            bottom: this.body.bottom + this.precision,
+            left: this.body.left,
+            right: this.body.right
+        });
+    }
+    get left() {
+        return this.test({
+            top: this.body.top,
+            bottom: this.body.bottom,
+            left: this.body.left - this.precision,
+            right: this.body.left
+        });
+    }
+    get right() {
+        return this.test({
+            top: this.body.top,
+            bottom: this.body.bottom,
+            left: this.body.right,
+            right: this.body.right + this.precision
+        });
+    }
+    get any() {
+        return this.test({
+            top: this.body.top,
+            bottom: this.body.bottom,
+            left: this.body.left - this.precision,
+            right: this.body.right + this.precision
+        }) || this.test({
+            top: this.body.top - this.precision,
+            bottom: this.body.bottom + this.precision,
+            left: this.body.left,
+            right: this.body.right
+        });
+    }
+
+    copyInto(obj) {
+        obj.top = this.top;
+        obj.bottom = this.bottom;
+        obj.left = this.left;
+        obj.right = this.right;
+        obj.any = this.any;
+        return obj;
+    }
+}
+
+class TerrainOverlapSensor {
+    constructor(body) {
+        this.body = body;
+        this.precision = 0.001;
+    }
+
+    get x() {
+        if (!this.body.nearbyTerrainTiles) return 0;
+        const dx = this.body.deltaX();
+        const mm = dx >= 0 ? Math.max : Math.min;
+        return this.body.nearbyTerrainTiles.reduce((ov, t) => mm(ov, t.overlapX(this.body, dx)), 0);
+    }
+    get y() {
+        if (!this.body.nearbyTerrainTiles) return 0;
+        const dy = this.body.deltaY();
+        const mm = dy >= 0 ? Math.max : Math.min;
+        return this.body.nearbyTerrainTiles.reduce((ov, t) => mm(ov, t.overlapY(this.body, dy)), 0);
+    }
+    get any() {
+        return this.x || this.y;
+    }
+}
 
 class DiggersPhysicsBody {
     constructor(sprite) {
@@ -5,49 +96,24 @@ class DiggersPhysicsBody {
         this.game = sprite.game;
 
         this.type = Phaser.Physics.DIGGERS;
-
-        this.offset = new Phaser.Point();
-
-        this.position = new Phaser.Point(sprite.x, sprite.y);
-        this.prev = new Phaser.Point(this.position.x, this.position.y);
-
         this.width = sprite.width;
         this.height = sprite.height;
-        this.halfWidth = Math.abs(sprite.width / 2);
-        this.halfHeight = Math.abs(sprite.height / 2);
 
-        this.center = new Phaser.Point(sprite.x + this.halfWidth, sprite.y + this.halfHeight);
+        this.position = new Phaser.Point(sprite.x, sprite.y);
         this.velocity = new Phaser.Point();
+        this.touching = new TerrainTouchSensor(this);
+        this.overlap = new TerrainOverlapSensor(this);
+
+        this.prevPosition = new Phaser.Point(this.position.x, this.position.y);
+        this.prevVelocity = new Phaser.Point();
+        this.prevTouching = this.touching.copyInto({});
 
         this.gravity = 0.5;
+        this.stepHeight = 48/3;
+    }
 
-        /**
-        * @property {number} facing - A const reference to the direction the Body is traveling or facing.
-        * @default
-        */
-        this.facing = Phaser.NONE;
-
-        /**
-        * This object is populated with boolean values when the Body collides with another.
-        * touching.up = true means the collision happened to the top of this Body for example.
-        * @property {object} touching - An object containing touching results.
-        */
-        this.touching = { none: true, up: false, down: false, left: false, right: false };
-
-        /**
-        * This object is populated with previous touching values from the bodies previous collision.
-        * @property {object} wasTouching - An object containing previous touching results.
-        */
-        this.wasTouching = { none: true, up: false, down: false, left: false, right: false };
-
-        /**
-        * This object is populated with boolean values when the Body collides with the World bounds or a Tile.
-        * For example if blocked.up is true then the Body cannot move up.
-        * @property {object} blocked - An object containing on which faces this Body is blocked from moving, if any.
-        */
-        this.blocked = { up: false, down: false, left: false, right: false };
-
-        this.dirty = false;
+    setCollisionTerrain(terrain) {
+        this.terrain = terrain;
     }
 
     destroy() {
@@ -55,54 +121,108 @@ class DiggersPhysicsBody {
         this.sprite = null;
     }
 
-    get right() {
-        return this.position.x + this.width;
-    }
-    get bottom() {
-        return this.position.y + this.height;
-    }
+    get top() { return this.position.y; }
+    get bottom() { return this.position.y + this.height; }
+    get left() { return this.position.x; }
+    get right() { return this.position.x + this.width; }
 
     preUpdate() {
-        this.prev.x = this.position.x;
-        this.prev.y = this.position.y;
+        this.nearbyTerrainTiles = this.terrain.getTilesNear(this.position, 2);
 
-        // reset velocity on prior collision
-        if (this.touching.down && this.velocity.y > 0) {
-            this.velocity.y = 0;
-        }
-        if (this.touching.up && this.velocity.y < 0) {
-            this.velocity.y = 0;
+        // if moving left/right
+        if (this.velocity.x != 0) {
+            // apply velocity
+            this.position.x += this.velocity.x;
+
+            // steps/slopes logic...
+            if (this.overlap.any !== 0 && this.touching.bottom) {
+                const oy = this.overlap.y;
+                if (oy <= this.stepHeight) {
+                    // try stepping up a step
+                    this.position.y -= oy;
+                    if (this.overlap.any !== 0) {
+                        // if still colliding, revert the step-up attempt
+                        this.position.y += oy;
+                    }
+                }
+            }
+
+            // if step up succeeded, then we won't be colliding with anything
+
+            if (this.overlap.any !== 0) {
+                // must be a wall too high to step up
+                // or maybe we bumped into a wall while jumping/falling
+
+                // let's move out of the wall
+                this.position.x -= this.overlap.x;
+
+                // killing the horizontal velocity here would make sense, but it's a matter of preference
+                // makes it harder to get into side-tunnels when falling down a shaft
+                // this.velocity.x = 0;
+            }
         }
 
-        // apply gravity
+
+        // we'll always be moving down because of gravity
         this.velocity.y += this.gravity;
 
-        // cap velocities
-        if (this.velocity.y > 0 && this.velocity.y < 2) this.velocity.y = 2;
-        if (this.velocity.y > 6) this.velocity.y = 6;
-        if (this.velocity.y < -10) this.velocity.y = -10;
+        if (this.velocity.y > 0 && this.touching.bottom) {
+            // if we're touching the floor, then falling is impossible
+            // so we reset the velocity
+            this.velocity.y = 0
+        }
 
-        // apply velocity
+        if (this.velocity.y >= 0 && !this.touching.bottom && this.prevTouching.bottom) {
+            // we've begun falling...
+            // we may have just stepped down a step (or we could be falling off a cliff)
+            this.position.y += this.stepHeight;
+            if (this.touching.bottom) {
+                console.log('touching!');
+                // yes! we're back on the floor again
+                // if we're inside the floor, let's just get out of that...
+                if (this.overlap.y !== 0) {
+                    this.position.y -= this.overlap.y;
+                }
+            } else {
+                // revert the step-down (it was never meant to be)
+                // we must be falling farther than just a step
+                this.position.y -= this.stepHeight;
+            }
+        }
+
+        // apply velocity to current position
         this.position.y += this.velocity.y;
-        this.position.x += this.velocity.x;
 
-        // reset collisions
-        this.touching.none = true;
-        this.touching.up = false;
-        this.touching.down = false;
-        this.touching.left = false;
-        this.touching.right = false;
+        if (this.overlap.y !== 0) {
+            // if we hit our head or landed through the floor..
+            // let's move out of the floor/ceiling
+            this.position.y -= this.overlap.y;
+
+            // and kill the velocity
+            this.velocity.y = 0;
+        }
     }
 
     deltaY() {
-        return this.position.y - this.prev.y;
+        return this.position.y - this.prevPosition.y;
     }
     deltaX() {
-        return this.position.x - this.prev.x;
+        return this.position.x - this.prevPosition.x;
     }
 
     postUpdate() {
-        this.sprite.position = this.position;
+        // take note of previous values
+        // things may have changed during update()
+        this.prevPosition.x = this.position.x;
+        this.prevPosition.y = this.position.y;
+        this.prevVelocity.x = this.velocity.x;
+        this.prevVelocity.y = this.velocity.y;
+        this.touching.copyInto(this.prevTouching);
+
+        // set sprite position in anticipation of render()
+        // no half-pixels!
+        this.sprite.position.x = this.position.x << 0;
+        this.sprite.position.y = this.position.y << 0;
     }
 
     render(color = 'rgba(255,0,0,0.7)', filled = false) {
@@ -129,10 +249,9 @@ class DiggersPhysicsBody {
         }
     }
 
-    get x() { return this.position.x; }
-    get left() { return this.position.x; }
-    get y() { return this.position.y; }
-    get top() { return this.position.y; }
+    intersectsTile(tile) {
+
+    }
 
     intersects(body) {
         return !(this.right<<0 <= body.left<<0
@@ -155,17 +274,9 @@ class DiggersPhysicsBody {
 
         if (dy >= 0) {
             // we're falling into the body
-            if (gravityPass) {
-                this.touching.none = false;
-                this.touching.down = true;
-            }
             return this.bottom - body.position.y;
         } else {
             // we're jumping up into the body
-            if (gravityPass) {
-                this.touching.none = false;
-                this.touching.up = true;
-            }
             return this.position.y - body.bottom;
         }
     }
@@ -178,14 +289,11 @@ class DiggersPhysicsBody {
             return 0;
         }
 
-        this.touching.none = false;
         if (dx > 0) {
             // we're moving right into the body
-            this.touching.right = true;
             return this.right - body.left;
         } else {
             // we're moving left into the body
-            this.touching.left = true;
             return this.left - body.right;
         }
     }

@@ -48,7 +48,7 @@ class DiggersPhysics {
     }
 
     separateTerrainFromBody(terrain, body, gravityPass = false) {
-        const stepUpHeight = terrain.tileSize / 3;
+        const stepUpHeight = terrain.tileSize*1.05;
         const tiles = terrain.getTilesNear(body.position);
 
         this.separateTerrainY(body, tiles, stepUpHeight, gravityPass);
@@ -86,7 +86,7 @@ class DiggersPhysics {
                 body.touching.none = false;
                 body.touching.up = true;
             }
-            return body.position.y - tile.bottom;
+            return body.top - tile.bottom;
         }
     }
     overlapTilesY(body, tiles, gravityPass = false) {

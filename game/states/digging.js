@@ -29,12 +29,12 @@ state.create = function() {
     dummy.width = tileSize*0.25;
     dummy.height = (tileSize/8)*6;
     game.physics.enable(dummy, Phaser.Physics.DIGGERS);
+    dummy.body.setCollisionTerrain(terrain);
 
     keys = game.input.keyboard.createCursorKeys();
 }
 
 state.update = function() {
-    this.game.physics.diggers.separateTerrainFromBody(terrain, dummy.body, true);
 
     if (keys.right.isDown) {
         dummy.body.velocity.x = 2;
@@ -42,11 +42,10 @@ state.update = function() {
         dummy.body.velocity.x = -2;
     }
 
-    if (keys.up.isDown && dummy.body.touching.down) {
+    if (keys.up.isDown && dummy.body.touching.bottom) {
         dummy.body.velocity.y = -8.8;
     }
 
-    this.game.physics.diggers.separateTerrainFromBody(terrain, dummy.body);
 }
 
 
