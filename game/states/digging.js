@@ -52,7 +52,7 @@ state.update = function() {
 const dummyColor = 'rgba(255,255,255,0.5)';
 state.render = function(){
     terrain.debugRender();
-    dummy.body.render(dummyColor, true);
+    dummy.body.render(dummyColor);
 }
 
 state.preRender = function(){
