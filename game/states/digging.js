@@ -20,6 +20,7 @@ state.create = function() {
     game.add.image(0,0,'gback')
 
     let map = game.cache.getJSON("map");
+    game.world.setBounds(0, 0, map.width * map.tileWidth, map.height * map.tileheight);
     terrain = new DiggersTerrain(map, game);
     terrain.createSprites();
 
@@ -30,6 +31,9 @@ state.create = function() {
     dummy.height = (tileSize/8)*6;
     game.physics.enable(dummy, Phaser.Physics.DIGGERS);
     dummy.body.setCollisionTerrain(terrain);
+
+    game.camera.follow(dummy, Phaser.Camera.FOLLOW_PLATFORMER, 0.1, 0.1);
+    game.camera.setBoundsToWorld();
 
     keys = game.input.keyboard.createCursorKeys();
 }

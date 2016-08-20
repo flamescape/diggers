@@ -276,8 +276,8 @@ class DiggersTerrain {
         ctx.fillStyle = colour;
         ctx.strokeStyle = colour;
 
-        const px = (x - this.game.camera.x) * this.tileSize;
-        const py = (y - this.game.camera.y) * this.tileSize;
+        const px = (x * this.tileSize) - this.game.camera.x;
+        const py = (y * this.tileSize) - this.game.camera.y;
 
         if (tile.mask === DiggersTerrain.MASK_SOLID) {
             ctx.fillRect(px, py, this.tileSize, this.tileSize);
