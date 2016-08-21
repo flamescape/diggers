@@ -7,6 +7,7 @@ var state = {};
 
 state.preload = function() {
     game.load.spritesheet("gblock", "/img/gblock.png", 48, 48);
+    game.load.image("dummy", "/img/dummy.png");
     game.load.image("gback", "/img/gback.png");
     game.load.json("map", "/maps/1.json");
 }
@@ -26,7 +27,7 @@ state.create = function() {
 
     tileSize = map.tilewidth;
 
-    dummy = game.add.sprite(tileSize*5, tileSize*2);
+    dummy = game.add.sprite(tileSize*5, tileSize*2, "dummy");
     dummy.width = tileSize*0.25;
     dummy.height = (tileSize/8)*6;
     game.physics.enable(dummy, Phaser.Physics.DIGGERS);
@@ -58,7 +59,7 @@ state.render = function(){
     if (keys.down.isDown) {
         terrain.debugRender();
     }
-    dummy.body.render(dummyColor);
+    // dummy.body.render(dummyColor);
 }
 
 state.preRender = function(){

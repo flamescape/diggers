@@ -1,6 +1,6 @@
 require('./DiggersPhysics');
 
-var game = new Phaser.Game(1280, 800, Phaser.CANVAS);
+var game = new Phaser.Game(1280, 800, Phaser.AUTO);
 // game.time.desiredFps = 30;
 // game.time.advancedTiming = true;
 
